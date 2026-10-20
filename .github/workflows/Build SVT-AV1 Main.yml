@@ -49,15 +49,16 @@ jobs:
         uses: ilammy/setup-nasm@v1
 
       - name: Download SVT-AV1 Source Archive
+        shell: cmd
+        run: |
+          :: Use native Windows curl to fetch the archive file smoothly
+          curl.exe -L "https://gitlab.com" -o svt-av1.zip
+
+      - name: Unpack Codebase Archive
         shell: powershell
         run: |
-          # Download the source code archive directly from GitLab API
-          Invoke-WebRequest -Uri "https://gitlab.com" -OutFile "svt-av1.zip"
-          
-          # Unpack the folder contents
+          # Unpack and map the folder target name correctly
           Expand-Archive -Path "svt-av1.zip" -DestinationPath "."
-          
-          # Rename the extracted folder to keep path compatibility intact
           Rename-Item -Path "SVT-AV1-master" -NewName "gitlab-src"
 
       - name: Build with MSVC Batch Script

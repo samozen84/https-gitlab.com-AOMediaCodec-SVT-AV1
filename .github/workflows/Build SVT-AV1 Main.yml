@@ -13,12 +13,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Initialize Environment
+      - name: Checkout SVT-AV1 Mirror
         uses: actions/checkout@v4
-
-      - name: Clone SVT-AV1 from GitLab
-        run: |
-          git clone --depth=1 https://gitlab.com gitlab-src
+        with:
+          repository: 'AOMediaCodec/SVT-AV1'
+          ref: 'master'
+          path: 'gitlab-src' # Forces code directly into the correct target folder
 
       - name: Install Dependencies
         run: |
@@ -42,24 +42,15 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Initialize Environment
+      - name: Checkout SVT-AV1 Mirror
         uses: actions/checkout@v4
+        with:
+          repository: 'AOMediaCodec/SVT-AV1'
+          ref: 'master'
+          path: 'gitlab-src'
 
       - name: Install Assembly Compiler (NASM)
         uses: ilammy/setup-nasm@v1
-
-      - name: Download SVT-AV1 Source Archive
-        shell: cmd
-        run: |
-          :: Use native Windows curl to fetch the archive file smoothly
-          curl.exe -L "https://gitlab.com" -o svt-av1.zip
-
-      - name: Unpack Codebase Archive
-        shell: powershell
-        run: |
-          # Unpack and map the folder target name correctly
-          Expand-Archive -Path "svt-av1.zip" -DestinationPath "."
-          Rename-Item -Path "SVT-AV1-master" -NewName "gitlab-src"
 
       - name: Build with MSVC Batch Script
         shell: cmd

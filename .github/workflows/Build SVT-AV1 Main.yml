@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - name: Initialize Environment
-        uses: actions/checkout@v4 # This sets up your local workspace
+        uses: actions/checkout@v4
 
       - name: Clone SVT-AV1 from GitLab
         run: |
@@ -49,8 +49,8 @@ jobs:
         uses: ilammy/setup-nasm@v1
 
       - name: Clone SVT-AV1 from GitLab
-        shell: cmd
         run: |
+          git config --global credential.helper ""
           git clone --depth=1 https://gitlab.com gitlab-src
 
       - name: Build with MSVC Batch Script

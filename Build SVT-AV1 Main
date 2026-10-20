@@ -1,0 +1,63 @@
+name: Build SVT-AV1
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch: # Allows you to trigger the build manually
+
+jobs:
+  build-linux:
+    name: Build on Linux (Ubuntu)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout SVT-AV1 Repository
+        uses: actions/checkout@v4
+        with:
+          repository: 'AOMediaCodec/SVT-AV1'
+          ref: 'master' # Build the latest development version
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake nasm gcc g++
+
+      - name: Configure and Build
+        run: |
+          cd Build
+          cmake .. -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release
+          make -j$(nproc)
+
+      - name: Upload Binary Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: svt-av1-linux-bin
+          path: Bin/Release/SvtAv1EncApp
+
+  build-windows:
+    name: Build on Windows
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout SVT-AV1 Repository
+        uses: actions/checkout@v4
+        with:
+          repository: 'AOMediaCodec/SVT-AV1'
+          ref: 'master'
+
+      - name: Install Assembly Compiler (NASM)
+        uses: ilammy/setup-nasm@v1
+
+      - name: Build with MSVC Batch Script
+        shell: cmd
+        run: |
+          cd Build\windows
+          build.bat release
+
+      - name: Upload Binary Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: svt-av1-windows-bin
+          path: Bin/Release/SvtAv1EncApp.exe

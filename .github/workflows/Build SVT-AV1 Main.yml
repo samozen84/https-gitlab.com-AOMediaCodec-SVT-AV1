@@ -13,12 +13,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout SVT-AV1 Source Code
-        uses: actions/checkout@v4
-        with:
-          repository: 'AOMediaCodec/SVT-AV1'
-          ref: 'master'
-          path: 'svt-av1' # Explicitly downloads into a folder named svt-av1
+      - name: Fetch Codebase via Web API
+        run: |
+          # Fetch and unpack codebase directly without checking out local repo paths
+          curl -L "https://gitlab.com" | tar -xz
+          mv SVT-AV1-master* svt-av1
 
       - name: Install Dependencies
         run: |
@@ -42,12 +41,17 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout SVT-AV1 Source Code
-        uses: actions/checkout@v4
-        with:
-          repository: 'AOMediaCodec/SVT-AV1'
-          ref: 'master'
-          path: 'svt-av1'
+      - name: Fetch Codebase via Web API
+        shell: cmd
+        run: |
+          # Download via curl.exe which is native to Windows Server runners
+          curl.exe -L "https://gitlab.com" -o svt-av1.zip
+
+      - name: Unpack Codebase Archive
+        shell: powershell
+        run: |
+          Expand-Archive -Path "svt-av1.zip" -DestinationPath "."
+          Get-ChildItem -Path "SVT-AV1-*" -Directory | Rename-Item -NewName "svt-av1"
 
       - name: Set up MSVC Developer Command Prompt
         uses: ilammy/msvc-dev-cmd@v1

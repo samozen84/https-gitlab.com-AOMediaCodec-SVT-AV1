@@ -49,6 +49,7 @@ jobs:
         uses: ilammy/setup-nasm@v1
 
       - name: Clone SVT-AV1 from GitLab
+        shell: bash
         run: |
           git config --global credential.helper ""
           git clone --depth=1 https://gitlab.com gitlab-src

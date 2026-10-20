@@ -13,10 +13,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code and Submodules
+      - name: Checkout SVT-AV1 Source Code
         uses: actions/checkout@v4
         with:
-          submodules: 'recursive'
+          repository: 'AOMediaCodec/SVT-AV1'
+          ref: 'master'
+          path: 'svt-av1' # Explicitly downloads into a folder named svt-av1
 
       - name: Install Dependencies
         run: |
@@ -25,25 +27,27 @@ jobs:
 
       - name: Configure and Build
         run: |
-          cd gitlab-src/Build
-          cmake .. -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release
-          make -j$(nproc)
+          cd svt-av1
+          cmake -S . -B Build -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release
+          cmake --build Build -j $(nproc)
 
       - name: Upload Binary Artifact
         uses: actions/upload-artifact@v4
         with:
           name: svt-av1-linux-bin
-          path: gitlab-src/Bin/Release/SvtAv1EncApp
+          path: svt-av1/Bin/Release/SvtAv1EncApp
 
   build-windows:
     name: Build on Windows
     runs-on: windows-latest
 
     steps:
-      - name: Checkout Code and Submodules
+      - name: Checkout SVT-AV1 Source Code
         uses: actions/checkout@v4
         with:
-          submodules: 'recursive'
+          repository: 'AOMediaCodec/SVT-AV1'
+          ref: 'master'
+          path: 'svt-av1'
 
       - name: Set up MSVC Developer Command Prompt
         uses: ilammy/msvc-dev-cmd@v1
@@ -54,7 +58,7 @@ jobs:
       - name: Configure and Build with CMake
         shell: cmd
         run: |
-          cd gitlab-src
+          cd svt-av1
           cmake -S . -B Build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
           cmake --build Build --config Release -j %NUMBER_OF_PROCESSORS%
 
@@ -62,4 +66,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: svt-av1-windows-bin
-          path: gitlab-src/Bin/Release/SvtAv1EncApp.exe
+          path: svt-av1/Bin/Release/SvtAv1EncApp.exe

@@ -48,11 +48,17 @@ jobs:
       - name: Install Assembly Compiler (NASM)
         uses: ilammy/setup-nasm@v1
 
-      - name: Clone SVT-AV1 from GitLab
-        shell: bash
+      - name: Download SVT-AV1 Source Archive
+        shell: powershell
         run: |
-          git config --global credential.helper ""
-          git clone --depth=1 https://gitlab.com gitlab-src
+          # Download the source code archive directly from GitLab API
+          Invoke-WebRequest -Uri "https://gitlab.com" -OutFile "svt-av1.zip"
+          
+          # Unpack the folder contents
+          Expand-Archive -Path "svt-av1.zip" -DestinationPath "."
+          
+          # Rename the extracted folder to keep path compatibility intact
+          Rename-Item -Path "SVT-AV1-master" -NewName "gitlab-src"
 
       - name: Build with MSVC Batch Script
         shell: cmd

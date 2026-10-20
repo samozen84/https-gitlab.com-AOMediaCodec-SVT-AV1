@@ -13,11 +13,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout SVT-AV1 Repository
-        uses: actions/checkout@v4
-        with:
-          repository: 'https://gitlab.com'
-          ref: 'master' 
+      - name: Initialize Environment
+        uses: actions/checkout@v4 # This sets up your local workspace
+
+      - name: Clone SVT-AV1 from GitLab
+        run: |
+          git clone --depth=1 https://gitlab.com gitlab-src
 
       - name: Install Dependencies
         run: |
@@ -26,7 +27,7 @@ jobs:
 
       - name: Configure and Build
         run: |
-          cd Build
+          cd gitlab-src/Build
           cmake .. -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release
           make -j$(nproc)
 
@@ -34,30 +35,32 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: svt-av1-linux-bin
-          path: Bin/Release/SvtAv1EncApp
+          path: gitlab-src/Bin/Release/SvtAv1EncApp
 
   build-windows:
     name: Build on Windows
     runs-on: windows-latest
 
     steps:
-      - name: Checkout SVT-AV1 Repository
+      - name: Initialize Environment
         uses: actions/checkout@v4
-        with:
-          repository: 'https://gitlab.com'
-          ref: 'master'
 
       - name: Install Assembly Compiler (NASM)
         uses: ilammy/setup-nasm@v1
 
+      - name: Clone SVT-AV1 from GitLab
+        shell: cmd
+        run: |
+          git clone --depth=1 https://gitlab.com gitlab-src
+
       - name: Build with MSVC Batch Script
         shell: cmd
         run: |
-          cd Build\windows
+          cd gitlab-src\Build\windows
           build.bat release
 
       - name: Upload Binary Artifact
         uses: actions/upload-artifact@v4
         with:
           name: svt-av1-windows-bin
-          path: Bin/Release/SvtAv1EncApp.exe
+          path: gitlab-src/Bin/Release/SvtAv1EncApp.exe

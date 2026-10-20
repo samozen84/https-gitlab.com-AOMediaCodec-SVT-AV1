@@ -5,7 +5,7 @@ on:
     branches: [ "main", "master" ]
   pull_request:
     branches: [ "main", "master" ]
-  workflow_dispatch: # Allows you to trigger the build manually
+  workflow_dispatch: 
 
 jobs:
   build-linux:
@@ -16,8 +16,8 @@ jobs:
       - name: Checkout SVT-AV1 Repository
         uses: actions/checkout@v4
         with:
-          repository: 'AOMediaCodec/SVT-AV1'
-          ref: 'master' # Build the latest development version
+          repository: 'https://gitlab.com'
+          ref: 'master' 
 
       - name: Install Dependencies
         run: |
@@ -44,7 +44,7 @@ jobs:
       - name: Checkout SVT-AV1 Repository
         uses: actions/checkout@v4
         with:
-          repository: 'AOMediaCodec/SVT-AV1'
+          repository: 'https://gitlab.com'
           ref: 'master'
 
       - name: Install Assembly Compiler (NASM)

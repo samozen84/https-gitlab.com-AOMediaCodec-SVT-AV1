@@ -43,14 +43,14 @@ jobs:
       - name: Fetch and Extract Codebase
         shell: cmd
         run: |
-          :: Download the Linux compressed tarball which extracts reliably via Windows tar
+          :: Download the source archive file smoothly
           curl.exe -L "https://gitlab.com" -o svt-av1.tar.gz
           
-          :: Native Windows tar handles cross-platform folder generation perfectly
+          :: Native Windows tar extracts the nested directory synchronously
           tar.exe -xzf svt-av1.tar.gz
           
-          :: Rename using standard command line tools
-          ren SVT-AV1-master svt-av1
+          :: Match the dynamic hash-suffixed folder folder via wildcard and rename it
+          for /d %%i in (SVT-AV1-master*) do ren "%%i" svt-av1
 
       - name: Set up MSVC Developer Command Prompt
         uses: ilammy/msvc-dev-cmd@v1

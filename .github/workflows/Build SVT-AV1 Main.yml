@@ -13,12 +13,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout SVT-AV1 Mirror
+      - name: Checkout Code and Submodules
         uses: actions/checkout@v4
         with:
-          repository: 'AOMediaCodec/SVT-AV1'
-          ref: 'master'
-          path: 'gitlab-src' # Forces code directly into the correct target folder
+          submodules: 'recursive' # Automatically fetches the SVT-AV1 codebase securely
 
       - name: Install Dependencies
         run: |
@@ -42,12 +40,10 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout SVT-AV1 Mirror
+      - name: Checkout Code and Submodules
         uses: actions/checkout@v4
         with:
-          repository: 'AOMediaCodec/SVT-AV1'
-          ref: 'master'
-          path: 'gitlab-src'
+          submodules: 'recursive'
 
       - name: Install Assembly Compiler (NASM)
         uses: ilammy/setup-nasm@v1

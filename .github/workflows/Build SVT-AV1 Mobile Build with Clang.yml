@@ -1,0 +1,94 @@
+name: Build SVT-AV1 Mobile Build with Clang
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch Official SVT-AV1 Source Code
+        uses: actions/checkout@v4
+        with:
+          repository: 'AOMediaCodec/SVT-AV1'
+          ref: 'master'
+          path: 'svt-source'
+
+      - name: Install Build Dependencies (Linux Clang)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake clang llvm nasm python3
+
+      - name: Apply Mobile Configuration Patch
+        run: |
+          cd svt-source
+          sed -i 's/option(MOBILE_BUILD ".*" OFF)/option(MOBILE_BUILD "Mobile Build" ON)/g' CMakeLists.txt || true
+          sed -i 's/option(MINIMAL_BUILD ".*" OFF)/option(MINIMAL_BUILD "Minimal Build" ON)/g' CMakeLists.txt || true
+
+      - name: Configure and Build SVT-AV1 (Linux Clang Static)
+        run: |
+          mkdir -p build_linux
+          cd build_linux
+          # Forcing CMake to use Clang for compilation
+          export CC=clang
+          export CXX=clang++
+          cmake ../svt-source -DCMAKE_BUILD_TYPE=MinSizeRel -DBUILD_SHARED_LIBS=OFF -DMOBILE_BUILD=ON -DRTC_BUILD=OFF -DMINIMAL_BUILD=ON -DBUILD_TESTING=OFF
+          make -j$(nproc)
+          find .. -name "SvtAv1EncApp" -exec strip {} \; || true
+
+      - name: Upload Linux Standalone Binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: svt-av1-linux-mobile-clang
+          path: |
+            **/SvtAv1EncApp
+          if-no-files-found: error
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Fetch Official SVT-AV1 Source Code (Windows)
+        uses: actions/checkout@v4
+        with:
+          repository: 'AOMediaCodec/SVT-AV1'
+          ref: 'master'
+          path: 'svt-source'
+
+      - name: Set up MSYS2 Environment with Clang Toolchain
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: CLANG64
+          update: true
+          install: >-
+            mingw-w64-clang-x86_64-clang
+            mingw-w64-clang-x86_64-cmake
+            mingw-w64-clang-x86_64-ninja
+            mingw-w64-clang-x86_64-nasm
+            mingw-w64-clang-x86_64-python
+
+      - name: Configure and Compile SVT-AV1 (Windows Clang Static)
+        shell: msys2 {0}
+        run: |
+          cd svt-source
+          sed -i 's/option(MOBILE_BUILD ".*" OFF)/option(MOBILE_BUILD "Mobile Build" ON)/g' CMakeLists.txt || true
+          sed -i 's/option(MINIMAL_BUILD ".*" OFF)/option(MINIMAL_BUILD "Minimal Build" ON)/g' CMakeLists.txt || true
+          
+          cd ..
+          mkdir -p build_windows
+          cd build_windows
+          # MSYS2 CLANG64 environment natively links clang to CC/CXX profiles
+          cmake -G "Ninja" ../svt-source -DCMAKE_BUILD_TYPE=MinSizeRel -DBUILD_SHARED_LIBS=OFF -DMOBILE_BUILD=ON -DRTC_BUILD=OFF -DMINIMAL_BUILD=ON -DBUILD_TESTING=OFF -DENABLE_NASM=ON
+          ninja
+          find .. -name "SvtAv1EncApp.exe" -exec strip {} \; || true
+
+      - name: Upload Windows Standalone Binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: svt-av1-windows-mobile-clang
+          path: |
+            **/SvtAv1EncApp.exe
+          if-no-files-found: error

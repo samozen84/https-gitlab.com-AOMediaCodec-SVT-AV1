@@ -17,7 +17,7 @@ jobs:
       - name: Install Build Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake gcc g++ nasm
+          sudo apt-get install -y cmake gcc g++ nasm python3
 
       - name: Configure CMake (Linux Mobile Minimal)
         run: |
@@ -54,13 +54,14 @@ jobs:
             mingw-w64-ucrt-x86_64-cmake
             mingw-w64-ucrt-x86_64-ninja
             mingw-w64-ucrt-x86_64-nasm
+            mingw-w64-ucrt-x86_64-python
 
       - name: Configure and Compile SVT-AV1 (Windows MSYS2)
         shell: msys2 {0}
         run: |
           mkdir -p build
           cd build
-          cmake -G "Ninja" .. -DCMAKE_BUILD_TYPE=Release -DMOBILE_BUILD=ON -DMINIMAL_BUILD=ON -DBUILD_TESTING=OFF
+          cmake -G "Ninja" .. -DCMAKE_BUILD_TYPE=Release -DMOBILE_BUILD=ON -DMINIMAL_BUILD=ON -DBUILD_TESTING=OFF -DENABLE_NASM=ON
           ninja
 
       - name: Upload Windows Binaries
@@ -68,5 +69,5 @@ jobs:
         with:
           name: svt-av1-windows-mobile
           path: |
-            build/Bin/Release/
+            build/Bin/
             build/Source/API/

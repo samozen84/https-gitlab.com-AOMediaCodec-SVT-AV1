@@ -33,18 +33,17 @@ jobs:
         run: |
           mkdir -p build_linux
           cd build_linux
-          # -DBUILD_SHARED_LIBS=OFF forces a single static binary file
           cmake ../svt-source -DCMAKE_BUILD_TYPE=MinSizeRel -DBUILD_SHARED_LIBS=OFF -DMOBILE_BUILD=ON -DRTC_BUILD=OFF -DMINIMAL_BUILD=ON -DBUILD_TESTING=OFF
           make -j$(nproc)
-          strip Bin/Release/* || true
+          # Scrubber to minimize size
+          strip ../svt-source/Bin/Release/SvtAv1EncApp || true
 
-      - name: Upload Linux Binaries
+      - name: Upload Linux Standalone Binary
         uses: actions/upload-artifact@v4
         with:
           name: svt-av1-linux-mobile-standalone
-          path: |
-            build_linux/Bin/
-          if-no-files-found: warn
+          path: svt-source/Bin/Release/SvtAv1EncApp
+          if-no-files-found: error
 
   build-windows:
     runs-on: windows-latest
@@ -78,15 +77,13 @@ jobs:
           cd ..
           mkdir -p build_windows
           cd build_windows
-          # -DBUILD_SHARED_LIBS=OFF forces the Windows compiler to build a standalone executable
           cmake -G "Ninja" ../svt-source -DCMAKE_BUILD_TYPE=MinSizeRel -DBUILD_SHARED_LIBS=OFF -DMOBILE_BUILD=ON -DRTC_BUILD=OFF -DMINIMAL_BUILD=ON -DBUILD_TESTING=OFF -DENABLE_NASM=ON
           ninja
-          strip Bin/* || true
+          strip ../svt-source/Bin/Release/SvtAv1EncApp.exe || true
 
       - name: Upload Windows Standalone Binary
         uses: actions/upload-artifact@v4
         with:
           name: svt-av1-windows-mobile-standalone
-          path: |
-            build_windows/Bin/SvtAv1EncApp.exe
-          if-no-files-found: warn
+          path: svt-source/Bin/Release/SvtAv1EncApp.exe
+          if-no-files-found: error

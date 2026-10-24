@@ -36,20 +36,21 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up MinGW and NASM
-        uses: egor-tisin/setup-mingw-and-nasm@v1.3
+      - name: Set up MSYS2 Environment
+        uses: msys2/setup-msys2@v2
         with:
-          mingw-version: 13.2.0
+          msystem: UCRT64
+          update: true
+          install: >-
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-ninja
+            mingw-w64-ucrt-x86_64-nasm
 
-      - name: Configure CMake (Windows Mobile Minimal)
-        shell: pwsh
+      - name: Configure and Compile SVT-AV1 (Windows MSYS2)
+        shell: msys2 {0}
         run: |
-          mkdir build
+          mkdir -p build
           cd build
-          cmake -G "MinGW Makefiles" .. -DMOBILE_BUILD=ON -DMINIMAL_BUILD=ON -DBUILD_TESTING=OFF
-
-      - name: Compile SVT-AV1 (Windows GCC)
-        shell: pwsh
-        run: |
-          cd build
-          mingw32-make -j $env:NUMBER_OF_PROCESSORS
+          cmake -G "Ninja" .. -DMOBILE_BUILD=ON -DMINIMAL_BUILD=ON -DBUILD_TESTING=OFF
+          ninja

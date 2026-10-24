@@ -30,6 +30,14 @@ jobs:
           cd build
           make -j$(nproc)
 
+      - name: Upload Linux Binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: svt-av1-linux-mobile
+          path: |
+            build/Bin/Release/
+            build/Source/API/
+
   build-windows:
     runs-on: windows-latest
     steps:
@@ -39,22 +47,26 @@ jobs:
       - name: Set up MSYS2 Environment
         uses: msys2/setup-msys2@v2
         with:
-          msystem: MINGW64
+          msystem: UCRT64
           update: true
           install: >-
-            mingw-w64-x86_64-gcc
-            mingw-w64-x86_64-cmake
-            mingw-w64-x86_64-ninja
-            mingw-w64-x86_64-nasm
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-ninja
+            mingw-w64-ucrt-x86_64-nasm
 
       - name: Configure and Compile SVT-AV1 (Windows MSYS2)
         shell: msys2 {0}
         run: |
           mkdir -p build
           cd build
-          cmake -G "Ninja" .. \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DMOBILE_BUILD=ON \
-            -DMINIMAL_BUILD=ON \
-            -DBUILD_TESTING=OFF
+          cmake -G "Ninja" .. -DCMAKE_BUILD_TYPE=Release -DMOBILE_BUILD=ON -DMINIMAL_BUILD=ON -DBUILD_TESTING=OFF
           ninja
+
+      - name: Upload Windows Binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: svt-av1-windows-mobile
+          path: |
+            build/Bin/Release/
+            build/Source/API/

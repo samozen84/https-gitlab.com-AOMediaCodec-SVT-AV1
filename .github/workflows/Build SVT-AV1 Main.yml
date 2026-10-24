@@ -35,14 +35,16 @@ jobs:
           cd build_linux
           cmake ../svt-source -DCMAKE_BUILD_TYPE=MinSizeRel -DBUILD_SHARED_LIBS=OFF -DMOBILE_BUILD=ON -DRTC_BUILD=OFF -DMINIMAL_BUILD=ON -DBUILD_TESTING=OFF
           make -j$(nproc)
-          # Scrubber to minimize size
-          strip ../svt-source/Bin/Release/SvtAv1EncApp || true
+          # Dynamically locate and strip the compiled standalone file
+          find .. -name "SvtAv1EncApp" -exec strip {} \; || true
 
       - name: Upload Linux Standalone Binary
         uses: actions/upload-artifact@v4
         with:
           name: svt-av1-linux-mobile-standalone
-          path: svt-source/Bin/Release/SvtAv1EncApp
+          # Universal recursive search to grab the application regardless of directory case sensitivity
+          path: |
+            **/SvtAv1EncApp
           if-no-files-found: error
 
   build-windows:
@@ -79,11 +81,13 @@ jobs:
           cd build_windows
           cmake -G "Ninja" ../svt-source -DCMAKE_BUILD_TYPE=MinSizeRel -DBUILD_SHARED_LIBS=OFF -DMOBILE_BUILD=ON -DRTC_BUILD=OFF -DMINIMAL_BUILD=ON -DBUILD_TESTING=OFF -DENABLE_NASM=ON
           ninja
-          strip ../svt-source/Bin/Release/SvtAv1EncApp.exe || true
+          find .. -name "SvtAv1EncApp.exe" -exec strip {} \; || true
 
       - name: Upload Windows Standalone Binary
         uses: actions/upload-artifact@v4
         with:
           name: svt-av1-windows-mobile-standalone
-          path: svt-source/Bin/Release/SvtAv1EncApp.exe
+          # Universal recursive search to grab the standalone executable file
+          path: |
+            **/SvtAv1EncApp.exe
           if-no-files-found: error

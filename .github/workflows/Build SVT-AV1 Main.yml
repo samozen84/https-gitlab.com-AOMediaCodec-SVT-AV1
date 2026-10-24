@@ -11,11 +11,12 @@ jobs:
   build-linux:
     runs-on: ubuntu-latest
     steps:
-      - name: Download SVT-AV1 Commit Archive from GitHub Mirror
+      - name: Download SVT-AV1 Commit Archive from GitLab Web Engine
         run: |
-          mkdir -p svt-source
-          # Fetching from the official GitHub mirror archive API to ensure the download succeeds
-          curl -L "https://github.com" | tar -xzf - -C svt-source --strip-components=1
+          # Fetch using the web engine raw snapshot format which forces GitLab to zip the custom integration commit
+          curl -L "https://gitlab.com" -o svt.zip
+          unzip -q svt.zip
+          mv SVT-AV1-aa50400b4cef330626ece7f9b4021df4051804a2 svt-source
 
       - name: Install Build Dependencies
         run: |
@@ -52,14 +53,14 @@ jobs:
             mingw-w64-ucrt-x86_64-nasm
             mingw-w64-ucrt-x86_64-python
             curl
-            tar
+            unzip
 
       - name: Download and Compile SVT-AV1 (Windows MSYS2)
         shell: msys2 {0}
         run: |
-          mkdir -p svt-source
-          # Fetching within the MSYS2 container via the stable GitHub storage backbone
-          curl -L "https://github.com" | tar -xzf - -C svt-source --strip-components=1
+          curl -L "https://gitlab.com" -o svt.zip
+          unzip -q svt.zip
+          mv SVT-AV1-aa50400b4cef330626ece7f9b4021df4051804a2 svt-source
           
           mkdir -p build_windows
           cd build_windows

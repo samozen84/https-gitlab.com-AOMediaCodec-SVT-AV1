@@ -11,13 +11,12 @@ jobs:
   build-linux:
     runs-on: ubuntu-latest
     steps:
-      # Use the native checkout tool to pull the real repository, avoiding git clone errors
-      - name: Fetch SVT-AV1 Source Code
-        uses: actions/checkout@v4
-        with:
-          repository: 'AOMediaCodec/SVT-AV1'
-          ref: 'aa50400b4cef330626ece7f9b4021df4051804a2'
-          path: 'svt-source'
+      - name: Download SVT-AV1 Commit Archive from GitLab
+        run: |
+          # Fetching the exact commit snapshot using direct HTTPS archive to bypass Git network blocks
+          curl -L "https://gitlab.com" -o svt.tar.gz
+          tar -xzf svt.tar.gz
+          mv SVT-AV1-aa50400b4cef330626ece7f9b4021df4051804a2 svt-source
 
       - name: Install Build Dependencies
         run: |
@@ -42,13 +41,6 @@ jobs:
   build-windows:
     runs-on: windows-latest
     steps:
-      - name: Fetch SVT-AV1 Source Code (Windows)
-        uses: actions/checkout@v4
-        with:
-          repository: 'AOMediaCodec/SVT-AV1'
-          ref: 'aa50400b4cef330626ece7f9b4021df4051804a2'
-          path: 'svt-source'
-
       - name: Set up MSYS2 Environment
         uses: msys2/setup-msys2@v2
         with:
@@ -60,10 +52,17 @@ jobs:
             mingw-w64-ucrt-x86_64-ninja
             mingw-w64-ucrt-x86_64-nasm
             mingw-w64-ucrt-x86_64-python
+            curl
+            tar
 
-      - name: Configure and Compile SVT-AV1 (Windows MSYS2)
+      - name: Download and Compile SVT-AV1 (Windows MSYS2)
         shell: msys2 {0}
         run: |
+          # Pull the exact commit snapshot directly inside MSYS2
+          curl -L "https://gitlab.com" -o svt.tar.gz
+          tar -xzf svt.tar.gz
+          mv SVT-AV1-aa50400b4cef330626ece7f9b4021df4051804a2 svt-source
+          
           mkdir -p build_windows
           cd build_windows
           cmake -G "Ninja" ../svt-source -DCMAKE_BUILD_TYPE=Release -DMOBILE_BUILD=ON -DRTC_BUILD=OFF -DMINIMAL_BUILD=ON -DBUILD_TESTING=OFF -DENABLE_NASM=ON

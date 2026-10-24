@@ -19,11 +19,31 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y cmake gcc g++ nasm python3
 
+      - name: Debug - List Repository Contents
+        run: |
+          echo "=== ROOT DIRECTORY CONTENTS ==="
+          ls -la
+          echo "=== SEARCHING FOR CMAKELISTS.TXT ==="
+          find . -name "CMakeLists.txt"
+
       - name: Configure CMake (Linux Mobile Minimal)
         run: |
+          # Create build folder
           mkdir -p build_linux
           cd build_linux
-          cmake "$GITHUB_WORKSPACE" -DMOBILE_BUILD=ON -DRTC_BUILD=OFF -DMINIMAL_BUILD=ON -DBUILD_TESTING=OFF
+          
+          # Attempt to find the correct directory automatically
+          if [ -f "../CMakeLists.txt" ]; then
+            TARGET_SRC=".."
+          elif [ -f "../SVT-AV1/CMakeLists.txt" ]; then
+            TARGET_SRC="../SVT-AV1"
+          else
+            # Fallback search if nested elsewhere
+            TARGET_SRC=$(find .. -name "CMakeLists.txt" -not -path "*/build_linux/*" | head -n 1 | xargs dirname)
+          fi
+          
+          echo "Found CMakeLists.txt source target at: $TARGET_SRC"
+          cmake "$TARGET_SRC" -DMOBILE_BUILD=ON -DRTC_BUILD=OFF -DMINIMAL_BUILD=ON -DBUILD_TESTING=OFF
 
       - name: Compile SVT-AV1 (Linux)
         run: |
@@ -61,8 +81,17 @@ jobs:
         run: |
           mkdir -p build_windows
           cd build_windows
-          # Mapping to MSYS2 style workspace variables safely
-          cmake -G "Ninja" "${GITHUB_WORKSPACE}" -DCMAKE_BUILD_TYPE=Release -DMOBILE_BUILD=ON -DRTC_BUILD=OFF -DMINIMAL_BUILD=ON -DBUILD_TESTING=OFF -DENABLE_NASM=ON
+          
+          # Find source target
+          if [ -f "../CMakeLists.txt" ]; then
+            TARGET_SRC=".."
+          elif [ -f "../SVT-AV1/CMakeLists.txt" ]; then
+            TARGET_SRC="../SVT-AV1"
+          else
+            TARGET_SRC=$(find .. -name "CMakeLists.txt" -not -path "*/build_windows/*" | head -n 1 | xargs dirname)
+          fi
+          
+          cmake -G "Ninja" "$TARGET_SRC" -DCMAKE_BUILD_TYPE=Release -DMOBILE_BUILD=ON -DRTC_BUILD=OFF -DMINIMAL_BUILD=ON -DBUILD_TESTING=OFF -DENABLE_NASM=ON
           ninja
 
       - name: Upload Windows Binaries

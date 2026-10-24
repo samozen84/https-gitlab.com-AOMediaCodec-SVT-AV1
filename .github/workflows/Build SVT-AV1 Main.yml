@@ -23,7 +23,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -DMOBILE_BUILD=ON -DMINIMAL_BUILD=ON -DBUILD_TESTING=OFF
+          cmake .. -DMOBILE_BUILD=ON -DRTC_BUILD=OFF -DMINIMAL_BUILD=ON -DBUILD_TESTING=OFF
 
       - name: Compile SVT-AV1 (Linux)
         run: |
@@ -35,7 +35,7 @@ jobs:
         with:
           name: svt-av1-linux-mobile
           path: |
-            build/Bin/Release/
+            build/Bin/
             build/Source/API/
 
   build-windows:
@@ -61,7 +61,7 @@ jobs:
         run: |
           mkdir -p build
           cd build
-          cmake -G "Ninja" .. -DCMAKE_BUILD_TYPE=Release -DMOBILE_BUILD=ON -DMINIMAL_BUILD=ON -DBUILD_TESTING=OFF -DENABLE_NASM=ON
+          cmake -G "Ninja" .. -DCMAKE_BUILD_TYPE=Release -DMOBILE_BUILD=ON -DRTC_BUILD=OFF -DMINIMAL_BUILD=ON -DBUILD_TESTING=OFF -DENABLE_NASM=ON
           ninja
 
       - name: Upload Windows Binaries

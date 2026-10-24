@@ -21,13 +21,13 @@ jobs:
 
       - name: Configure CMake (Linux Mobile Minimal)
         run: |
-          mkdir build
-          cd build
-          cmake .. -DMOBILE_BUILD=ON -DRTC_BUILD=OFF -DMINIMAL_BUILD=ON -DBUILD_TESTING=OFF
+          mkdir -p build_linux
+          cd build_linux
+          cmake "$GITHUB_WORKSPACE" -DMOBILE_BUILD=ON -DRTC_BUILD=OFF -DMINIMAL_BUILD=ON -DBUILD_TESTING=OFF
 
       - name: Compile SVT-AV1 (Linux)
         run: |
-          cd build
+          cd build_linux
           make -j$(nproc)
 
       - name: Upload Linux Binaries
@@ -35,8 +35,8 @@ jobs:
         with:
           name: svt-av1-linux-mobile
           path: |
-            build/Bin/
-            build/Source/API/
+            build_linux/Bin/
+            build_linux/Source/API/
 
   build-windows:
     runs-on: windows-latest
@@ -59,9 +59,10 @@ jobs:
       - name: Configure and Compile SVT-AV1 (Windows MSYS2)
         shell: msys2 {0}
         run: |
-          mkdir -p build
-          cd build
-          cmake -G "Ninja" .. -DCMAKE_BUILD_TYPE=Release -DMOBILE_BUILD=ON -DRTC_BUILD=OFF -DMINIMAL_BUILD=ON -DBUILD_TESTING=OFF -DENABLE_NASM=ON
+          mkdir -p build_windows
+          cd build_windows
+          # Mapping to MSYS2 style workspace variables safely
+          cmake -G "Ninja" "${GITHUB_WORKSPACE}" -DCMAKE_BUILD_TYPE=Release -DMOBILE_BUILD=ON -DRTC_BUILD=OFF -DMINIMAL_BUILD=ON -DBUILD_TESTING=OFF -DENABLE_NASM=ON
           ninja
 
       - name: Upload Windows Binaries
@@ -69,5 +70,5 @@ jobs:
         with:
           name: svt-av1-windows-mobile
           path: |
-            build/Bin/
-            build/Source/API/
+            build_windows/Bin/
+            build_windows/Source/API/

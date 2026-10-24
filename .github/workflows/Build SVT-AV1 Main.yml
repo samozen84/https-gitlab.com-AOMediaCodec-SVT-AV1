@@ -11,19 +11,24 @@ jobs:
   build-linux:
     runs-on: ubuntu-latest
     steps:
-      - name: Download SVT-AV1 Commit Archive from GitLab Web Engine
-        run: |
-          # Fetch using a browser User-Agent string to completely bypass the GitLab firewalls and download blocks
-          curl --fail -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
-            "https://gitlab.com" \
-            -o svt.zip
-          unzip -q svt.zip
-          mv SVT-AV1-aa50400b4cef330626ece7f9b4021df4051804a2 svt-source
+      - name: Fetch Official SVT-AV1 Source Code
+        uses: actions/checkout@v4
+        with:
+          repository: 'AOMediaCodec/SVT-AV1'
+          ref: 'master'
+          path: 'svt-source'
 
       - name: Install Build Dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake gcc g++ nasm python3
+
+      - name: Apply Mobile Configuration Patch
+        run: |
+          cd svt-source
+          # Dynamically forcing the target configuration options inside the CMake setup
+          sed -i 's/option(MOBILE_BUILD ".*" OFF)/option(MOBILE_BUILD "Mobile Build" ON)/g' CMakeLists.txt || true
+          sed -i 's/option(MINIMAL_BUILD ".*" OFF)/option(MINIMAL_BUILD "Minimal Build" ON)/g' CMakeLists.txt || true
 
       - name: Configure and Build SVT-AV1 (Linux)
         run: |
@@ -43,6 +48,13 @@ jobs:
   build-windows:
     runs-on: windows-latest
     steps:
+      - name: Fetch Official SVT-AV1 Source Code (Windows)
+        uses: actions/checkout@v4
+        with:
+          repository: 'AOMediaCodec/SVT-AV1'
+          ref: 'master'
+          path: 'svt-source'
+
       - name: Set up MSYS2 Environment
         uses: msys2/setup-msys2@v2
         with:
@@ -54,19 +66,16 @@ jobs:
             mingw-w64-ucrt-x86_64-ninja
             mingw-w64-ucrt-x86_64-nasm
             mingw-w64-ucrt-x86_64-python
-            curl
-            unzip
 
-      - name: Download and Compile SVT-AV1 (Windows MSYS2)
+      - name: Configure and Compile SVT-AV1 (Windows MSYS2)
         shell: msys2 {0}
         run: |
-          # Fetching inside MSYS2 using matching browser headers to guarantee connection pass-through
-          curl --fail -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
-            "https://gitlab.com" \
-            -o svt.zip
-          unzip -q svt.zip
-          mv SVT-AV1-aa50400b4cef330626ece7f9b4021df4051804a2 svt-source
+          cd svt-source
+          # Apply the direct build injection configuration inside the MSYS2 terminal
+          sed -i 's/option(MOBILE_BUILD ".*" OFF)/option(MOBILE_BUILD "Mobile Build" ON)/g' CMakeLists.txt || true
+          sed -i 's/option(MINIMAL_BUILD ".*" OFF)/option(MINIMAL_BUILD "Minimal Build" ON)/g' CMakeLists.txt || true
           
+          cd ..
           mkdir -p build_windows
           cd build_windows
           cmake -G "Ninja" ../svt-source -DCMAKE_BUILD_TYPE=Release -DMOBILE_BUILD=ON -DRTC_BUILD=OFF -DMINIMAL_BUILD=ON -DBUILD_TESTING=OFF -DENABLE_NASM=ON

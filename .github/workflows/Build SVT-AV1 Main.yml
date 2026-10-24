@@ -1,72 +1,70 @@
-name: Build SVT-AV1
+name: Build SVT-AV1 Mobile Build
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ main, master ]
   pull_request:
-    branches: [ "main", "master" ]
-  workflow_dispatch: 
+    branches: [ main, master ]
+  workflow_dispatch:
 
 jobs:
+  # -------------------------------------------------------------
+  # LINUX BUILD JOB
+  # -------------------------------------------------------------
   build-linux:
-    name: Build on Linux (Ubuntu)
     runs-on: ubuntu-latest
-
     steps:
-      - name: Fetch Codebase via Web API
-        run: |
-          curl -L "https://gitlab.com" | tar -xz
-          mv SVT-AV1-master* svt-av1
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      - name: Install Dependencies
+      - name: Install Build Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake nasm gcc g++
+          sudo apt-get install -y cmake gcc g++ nasm
 
-      - name: Configure and Build
+      - name: Configure CMake (Linux Mobile Minimal)
         run: |
-          cd svt-av1
-          cmake -S . -B Build -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release
-          cmake --build Build -j $(nproc)
+          mkdir build
+          cd build
+          cmake .. \
+            -DMOBILE_BUILD=ON \
+            -DMINIMAL_BUILD=ON \
+            -DBUILD_TESTING=ON
 
-      - name: Upload Binary Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: svt-av1-linux-bin
-          path: svt-av1/Bin/Release/SvtAv1EncApp
+      - name: Compile SVT-AV1 (Linux)
+        run: |
+          cd build
+          make -j$(nproc)
 
+  # -------------------------------------------------------------
+  # WINDOWS BUILD JOB
+  # -------------------------------------------------------------
   build-windows:
-    name: Build on Windows
     runs-on: windows-latest
-
     steps:
-      - name: Fetch and Extract Codebase
-        shell: cmd
-        run: |
-          :: Download the source archive file smoothly
-          curl.exe -L "https://gitlab.com" -o svt-av1.tar.gz
-          
-          :: Native Windows tar extracts the nested directory synchronously
-          tar.exe -xzf svt-av1.tar.gz
-          
-          :: Match the dynamic hash-suffixed folder folder via wildcard and rename it
-          for /d %%i in (SVT-AV1-master*) do ren "%%i" svt-av1
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      - name: Set up MSVC Developer Command Prompt
+      - name: Set up MSVC & Developer Command Prompt
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Install Assembly Compiler (NASM)
-        uses: ilammy/setup-nasm@v1
+      - name: Install NASM (Windows)
+        run: |
+          choco install nasm
+          echo "C:\Program Files\NASM" >> $GITHUB_PATH
 
-      - name: Configure and Build with CMake
+      - name: Configure CMake (Windows Mobile Minimal)
         shell: cmd
         run: |
-          cd svt-av1
-          cmake -S . -B Build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
-          cmake --build Build --config Release -j %NUMBER_OF_PROCESSORS%
+          mkdir build
+          cd build
+          cmake -G "Visual Studio 17 2022" -A x64 .. ^
+            -DMOBILE_BUILD=ON ^
+            -DMINIMAL_BUILD=ON ^
+            -DBUILD_TESTING=ON
 
-      - name: Upload Binary Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: svt-av1-windows-bin
-          path: svt-av1/Bin/Release/SvtAv1EncApp.exe
+      - name: Compile SVT-AV1 (Windows MSVC)
+        shell: cmd
+        run: |
+          cd build
+          cmake --build . --config Release -j %NUMBER_OF_PROCESSORS%

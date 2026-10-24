@@ -13,10 +13,10 @@ jobs:
     steps:
       - name: Download SVT-AV1 Commit Archive from GitLab
         run: |
-          # Fetching the exact commit snapshot using direct HTTPS archive to bypass Git network blocks
-          curl -L "https://gitlab.com" -o svt.tar.gz
-          tar -xzf svt.tar.gz
-          mv SVT-AV1-aa50400b4cef330626ece7f9b4021df4051804a2 svt-source
+          # Create target directory first
+          mkdir -p svt-source
+          # Fetch snapshot and extract contents directly into svt-source, ignoring top-level directory names
+          curl -L "https://gitlab.com" | tar -xzf - -C svt-source --strip-components=1
 
       - name: Install Build Dependencies
         run: |
@@ -58,10 +58,9 @@ jobs:
       - name: Download and Compile SVT-AV1 (Windows MSYS2)
         shell: msys2 {0}
         run: |
-          # Pull the exact commit snapshot directly inside MSYS2
-          curl -L "https://gitlab.com" -o svt.tar.gz
-          tar -xzf svt.tar.gz
-          mv SVT-AV1-aa50400b4cef330626ece7f9b4021df4051804a2 svt-source
+          # Extract into windows clean environment seamlessly
+          mkdir -p svt-source
+          curl -L "https://gitlab.com" | tar -xzf - -C svt-source --strip-components=1
           
           mkdir -p build_windows
           cd build_windows

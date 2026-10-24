@@ -19,10 +19,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y cmake gcc g++ nasm python3 git
 
-      - name: Clone SVT-AV1 Source Code from GitLab
+      - name: Clone SVT-AV1 Source Code from GitHub Mirror
         run: |
-          # Clones the master branch directly from the official repository source
-          git clone https://gitlab.com svt-source
+          # Pulling directly from GitHub's internal mirror network to completely bypass GitLab 128 blockades
+          git clone https://github.com svt-source
+          cd svt-source
+          # Target your exact commit requested in the first message
+          git checkout aa50400b4cef330626ece7f9b4021df4051804a2
 
       - name: Configure and Build SVT-AV1 (Linux)
         run: |
@@ -61,9 +64,12 @@ jobs:
       - name: Clone and Build SVT-AV1 (Windows MSYS2)
         shell: msys2 {0}
         run: |
-          # Fetch the clean source code from GitLab inside the virtual Windows environment
-          git clone https://gitlab.com svt-source
+          # Fetch the clean source code from the GitHub mirror
+          git clone https://github.com svt-source
+          cd svt-source
+          git checkout aa50400b4cef330626ece7f9b4021df4051804a2
           
+          cd ..
           mkdir -p build_windows
           cd build_windows
           cmake -G "Ninja" ../svt-source -DCMAKE_BUILD_TYPE=Release -DMOBILE_BUILD=ON -DRTC_BUILD=OFF -DMINIMAL_BUILD=ON -DBUILD_TESTING=OFF -DENABLE_NASM=ON

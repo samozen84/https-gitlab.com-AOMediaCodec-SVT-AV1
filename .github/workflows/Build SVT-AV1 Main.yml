@@ -11,43 +11,33 @@ jobs:
   build-linux:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
+      - name: Checkout Repository Recursively
         uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+          fetch-depth: 0
 
       - name: Install Build Dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake gcc g++ nasm python3
 
-      - name: Debug - List Repository Contents
+      - name: Search and Force Build Source
         run: |
-          echo "=== ROOT DIRECTORY CONTENTS ==="
-          ls -la
-          echo "=== SEARCHING FOR CMAKELISTS.TXT ==="
-          find . -name "CMakeLists.txt"
-
-      - name: Configure CMake (Linux Mobile Minimal)
-        run: |
-          # Create build folder
-          mkdir -p build_linux
-          cd build_linux
+          # Locate CMakeLists.txt anywhere in workspace
+          TARGET_DIR=$(find . -name "CMakeLists.txt" -not -path "*/build*" | head -n 1 | xargs dirname)
           
-          # Attempt to find the correct directory automatically
-          if [ -f "../CMakeLists.txt" ]; then
-            TARGET_SRC=".."
-          elif [ -f "../SVT-AV1/CMakeLists.txt" ]; then
-            TARGET_SRC="../SVT-AV1"
-          else
-            # Fallback search if nested elsewhere
-            TARGET_SRC=$(find .. -name "CMakeLists.txt" -not -path "*/build_linux/*" | head -n 1 | xargs dirname)
+          if [ -z "$TARGET_DIR" ]; then
+            echo "ERROR: CMakeLists.txt was not found anywhere in this repository."
+            echo "Current Workspace Tree Layout:"
+            ls -R
+            exit 1
           fi
           
-          echo "Found CMakeLists.txt source target at: $TARGET_SRC"
-          cmake "$TARGET_SRC" -DMOBILE_BUILD=ON -DRTC_BUILD=OFF -DMINIMAL_BUILD=ON -DBUILD_TESTING=OFF
-
-      - name: Compile SVT-AV1 (Linux)
-        run: |
+          echo "Target Source Directory Identified: $TARGET_DIR"
+          mkdir -p build_linux
           cd build_linux
+          cmake "../$TARGET_DIR" -DMOBILE_BUILD=ON -DRTC_BUILD=OFF -DMINIMAL_BUILD=ON -DBUILD_TESTING=OFF
           make -j$(nproc)
 
       - name: Upload Linux Binaries
@@ -55,14 +45,17 @@ jobs:
         with:
           name: svt-av1-linux-mobile
           path: |
-            build_linux/Bin/
-            build_linux/Source/API/
+            **/Bin/
+            **/Source/API/
 
   build-windows:
     runs-on: windows-latest
     steps:
-      - name: Checkout Repository
+      - name: Checkout Repository Recursively
         uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+          fetch-depth: 0
 
       - name: Set up MSYS2 Environment
         uses: msys2/setup-msys2@v2
@@ -79,19 +72,17 @@ jobs:
       - name: Configure and Compile SVT-AV1 (Windows MSYS2)
         shell: msys2 {0}
         run: |
-          mkdir -p build_windows
-          cd build_windows
+          TARGET_DIR=$(find . -name "CMakeLists.txt" -not -path "*/build*" | head -n 1 | xargs dirname)
           
-          # Find source target
-          if [ -f "../CMakeLists.txt" ]; then
-            TARGET_SRC=".."
-          elif [ -f "../SVT-AV1/CMakeLists.txt" ]; then
-            TARGET_SRC="../SVT-AV1"
-          else
-            TARGET_SRC=$(find .. -name "CMakeLists.txt" -not -path "*/build_windows/*" | head -n 1 | xargs dirname)
+          if [ -z "$TARGET_DIR" ]; then
+            echo "ERROR: CMakeLists.txt was not found on Windows check paths."
+            ls -R
+            exit 1
           fi
           
-          cmake -G "Ninja" "$TARGET_SRC" -DCMAKE_BUILD_TYPE=Release -DMOBILE_BUILD=ON -DRTC_BUILD=OFF -DMINIMAL_BUILD=ON -DBUILD_TESTING=OFF -DENABLE_NASM=ON
+          mkdir -p build_windows
+          cd build_windows
+          cmake -G "Ninja" "../$TARGET_DIR" -DCMAKE_BUILD_TYPE=Release -DMOBILE_BUILD=ON -DRTC_BUILD=OFF -DMINIMAL_BUILD=ON -DBUILD_TESTING=OFF -DENABLE_NASM=ON
           ninja
 
       - name: Upload Windows Binaries
@@ -99,5 +90,5 @@ jobs:
         with:
           name: svt-av1-windows-mobile
           path: |
-            build_windows/Bin/
-            build_windows/Source/API/
+            **/Bin/
+            **/Source/API/

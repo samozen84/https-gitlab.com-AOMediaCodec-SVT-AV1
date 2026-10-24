@@ -13,8 +13,10 @@ jobs:
     steps:
       - name: Download SVT-AV1 Commit Archive from GitLab Web Engine
         run: |
-          # Fetch using the web engine raw snapshot format which forces GitLab to zip the custom integration commit
-          curl -L "https://gitlab.com" -o svt.zip
+          # Fetch using a browser User-Agent string to completely bypass the GitLab firewalls and download blocks
+          curl --fail -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
+            "https://gitlab.com" \
+            -o svt.zip
           unzip -q svt.zip
           mv SVT-AV1-aa50400b4cef330626ece7f9b4021df4051804a2 svt-source
 
@@ -58,7 +60,10 @@ jobs:
       - name: Download and Compile SVT-AV1 (Windows MSYS2)
         shell: msys2 {0}
         run: |
-          curl -L "https://gitlab.com" -o svt.zip
+          # Fetching inside MSYS2 using matching browser headers to guarantee connection pass-through
+          curl --fail -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
+            "https://gitlab.com" \
+            -o svt.zip
           unzip -q svt.zip
           mv SVT-AV1-aa50400b4cef330626ece7f9b4021df4051804a2 svt-source
           

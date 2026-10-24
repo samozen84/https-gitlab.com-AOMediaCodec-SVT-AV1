@@ -11,12 +11,11 @@ jobs:
   build-linux:
     runs-on: ubuntu-latest
     steps:
-      - name: Download SVT-AV1 Commit Archive from GitLab
+      - name: Download SVT-AV1 Commit Archive from GitHub Mirror
         run: |
-          # Create target directory first
           mkdir -p svt-source
-          # Fetch snapshot and extract contents directly into svt-source, ignoring top-level directory names
-          curl -L "https://gitlab.com" | tar -xzf - -C svt-source --strip-components=1
+          # Fetching from the official GitHub mirror archive API to ensure the download succeeds
+          curl -L "https://github.com" | tar -xzf - -C svt-source --strip-components=1
 
       - name: Install Build Dependencies
         run: |
@@ -58,9 +57,9 @@ jobs:
       - name: Download and Compile SVT-AV1 (Windows MSYS2)
         shell: msys2 {0}
         run: |
-          # Extract into windows clean environment seamlessly
           mkdir -p svt-source
-          curl -L "https://gitlab.com" | tar -xzf - -C svt-source --strip-components=1
+          # Fetching within the MSYS2 container via the stable GitHub storage backbone
+          curl -L "https://github.com" | tar -xzf - -C svt-source --strip-components=1
           
           mkdir -p build_windows
           cd build_windows

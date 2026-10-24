@@ -29,19 +29,20 @@ jobs:
           sed -i 's/option(MOBILE_BUILD ".*" OFF)/option(MOBILE_BUILD "Mobile Build" ON)/g' CMakeLists.txt || true
           sed -i 's/option(MINIMAL_BUILD ".*" OFF)/option(MINIMAL_BUILD "Minimal Build" ON)/g' CMakeLists.txt || true
 
-      - name: Configure and Build SVT-AV1 (Linux)
+      - name: Configure and Build SVT-AV1 (Linux Static)
         run: |
           mkdir -p build_linux
           cd build_linux
-          cmake ../svt-source -DMOBILE_BUILD=ON -DRTC_BUILD=OFF -DMINIMAL_BUILD=ON -DBUILD_TESTING=OFF
+          # -DBUILD_SHARED_LIBS=OFF forces a single static binary file
+          cmake ../svt-source -DCMAKE_BUILD_TYPE=MinSizeRel -DBUILD_SHARED_LIBS=OFF -DMOBILE_BUILD=ON -DRTC_BUILD=OFF -DMINIMAL_BUILD=ON -DBUILD_TESTING=OFF
           make -j$(nproc)
+          strip Bin/Release/* || true
 
       - name: Upload Linux Binaries
         uses: actions/upload-artifact@v4
         with:
-          name: svt-av1-linux-mobile
+          name: svt-av1-linux-mobile-standalone
           path: |
-            svt-source/Bin/Release/
             build_linux/Bin/
           if-no-files-found: warn
 
@@ -67,7 +68,7 @@ jobs:
             mingw-w64-ucrt-x86_64-nasm
             mingw-w64-ucrt-x86_64-python
 
-      - name: Configure and Compile SVT-AV1 (Windows MSYS2)
+      - name: Configure and Compile SVT-AV1 (Windows MSYS2 Static)
         shell: msys2 {0}
         run: |
           cd svt-source
@@ -77,14 +78,15 @@ jobs:
           cd ..
           mkdir -p build_windows
           cd build_windows
-          cmake -G "Ninja" ../svt-source -DCMAKE_BUILD_TYPE=Release -DMOBILE_BUILD=ON -DRTC_BUILD=OFF -DMINIMAL_BUILD=ON -DBUILD_TESTING=OFF -DENABLE_NASM=ON
+          # -DBUILD_SHARED_LIBS=OFF forces the Windows compiler to build a standalone executable
+          cmake -G "Ninja" ../svt-source -DCMAKE_BUILD_TYPE=MinSizeRel -DBUILD_SHARED_LIBS=OFF -DMOBILE_BUILD=ON -DRTC_BUILD=OFF -DMINIMAL_BUILD=ON -DBUILD_TESTING=OFF -DENABLE_NASM=ON
           ninja
+          strip Bin/* || true
 
-      - name: Upload Windows Binaries
+      - name: Upload Windows Standalone Binary
         uses: actions/upload-artifact@v4
         with:
-          name: svt-av1-windows-mobile
+          name: svt-av1-windows-mobile-standalone
           path: |
-            svt-source/Bin/Release/
-            build_windows/Bin/
+            build_windows/Bin/SvtAv1EncApp.exe
           if-no-files-found: warn

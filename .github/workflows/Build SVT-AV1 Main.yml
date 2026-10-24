@@ -26,7 +26,6 @@ jobs:
       - name: Apply Mobile Configuration Patch
         run: |
           cd svt-source
-          # Dynamically forcing the target configuration options inside the CMake setup
           sed -i 's/option(MOBILE_BUILD ".*" OFF)/option(MOBILE_BUILD "Mobile Build" ON)/g' CMakeLists.txt || true
           sed -i 's/option(MINIMAL_BUILD ".*" OFF)/option(MINIMAL_BUILD "Minimal Build" ON)/g' CMakeLists.txt || true
 
@@ -42,8 +41,9 @@ jobs:
         with:
           name: svt-av1-linux-mobile
           path: |
+            svt-source/Bin/Release/
             build_linux/Bin/
-            build_linux/Source/API/
+          if-no-files-found: warn
 
   build-windows:
     runs-on: windows-latest
@@ -71,7 +71,6 @@ jobs:
         shell: msys2 {0}
         run: |
           cd svt-source
-          # Apply the direct build injection configuration inside the MSYS2 terminal
           sed -i 's/option(MOBILE_BUILD ".*" OFF)/option(MOBILE_BUILD "Mobile Build" ON)/g' CMakeLists.txt || true
           sed -i 's/option(MINIMAL_BUILD ".*" OFF)/option(MINIMAL_BUILD "Minimal Build" ON)/g' CMakeLists.txt || true
           
@@ -86,5 +85,6 @@ jobs:
         with:
           name: svt-av1-windows-mobile
           path: |
+            svt-source/Bin/Release/
             build_windows/Bin/
-            build_windows/Source/API/
+          if-no-files-found: warn
